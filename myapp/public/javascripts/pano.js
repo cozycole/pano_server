@@ -21,6 +21,7 @@
   var screenfull = window.screenfull;
   var data = window.APP_DATA;
   var faceSize = 4096;
+  var sceneIndex = 0;
   var initialViewParameters = {
     pitch: 0,
     yaw: 0,
@@ -59,6 +60,8 @@
   var sceneListToggleElement = document.querySelector("#sceneListToggle");
   var autorotateToggleElement = document.querySelector("#autorotateToggle");
   var fullscreenToggleElement = document.querySelector("#fullscreenToggle");
+  var newSceneLeftButton = document.querySelector("#newPanoLeft");
+  var newSceneRightButton = document.querySelector("#newPanoRight");
 
   // Detect desktop or mobile mode.
   if (window.matchMedia) {
@@ -493,6 +496,33 @@
     return null;
   }
 
+  // #### MY CODE ####
+
+  // all scenes will go left to right if I can help it
+  // so that the arrows will line up with the direction
+  // of the changing scenes
+  newSceneLeftButton.style.display = "none";
+
+  newSceneLeftButton.onclick = () => {
+    console.log("Left Button handler triggered!");
+    switchScene(scenes[--sceneIndex]);
+    console.log(`Scene ${sceneIndex + 1}`);
+    if (sceneIndex == 0) {
+      newSceneLeftButton.style.display = "none";
+    }
+    newSceneRightButton.style.display = "inline-block";
+  };
+
+  newSceneRightButton.onclick = () => {
+    console.log("Right Button handler triggered!");
+    switchScene(scenes[++sceneIndex]);
+    console.log(`Scene ${sceneIndex + 1}`);
+    if (sceneIndex == data.scenes.length - 1) {
+      newSceneRightButton.style.display = "none";
+    }
+    newSceneLeftButton.style.display = "inline-block";
+  };
+
   // Display the initial scene.
-  switchScene(scenes[0]);
+  switchScene(scenes[sceneIndex]);
 })();

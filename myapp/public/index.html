@@ -57,13 +57,37 @@
     </a>
 
     <!-- NEW ELEMENTS -->
+    <div class="sideArrow">
+      <a href="javascript:void(0)" id="newPanoLeft" class="nextPano">
+        <img class="new_icon" src="images/left.png" />
+      </a>
 
-    <a href="javascript:void(0)" id="newPanoLeft" class="nextPano">
-      <img class="new_icon" src="images/left.png" />
-    </a>
-    <a href="javascript:void(0)" id="newPanoRight" class="nextPano">
-      <img class="new_icon" src="images/right.png" />
-    </a>
+      <a href="javascript:void(0)" id="newPanoRight" class="nextPano">
+        <img class="new_icon" src="images/right.png" />
+      </a>
+    </div>
+
+    <div class="container">
+      <div class="checklist">
+        <input type="checkbox" id="superlist" />
+        <label for="superlist">Very Distressed (SuperList)</label><br />
+        <input type="checkbox" id="distressed" />
+        <label for="superlist">Distressed</label><br />
+        <input type="checkbox" id="undetermined" />
+        <label for="superlist">Can't Determine</label><br />
+      </div>
+
+      <div class="bottomRight">
+        <button class="bottomButtons" id="nextHouse" type="button">
+          Next House
+        </button>
+      </div>
+      <div class="bottomLeft">
+        <button class="bottomButtons" id="prevHouse" type="button">
+          Prev. House
+        </button>
+      </div>
+    </div>
 
     <script src="vendor/screenfull.min.js"></script>
     <script src="vendor/bowser.min.js"></script>

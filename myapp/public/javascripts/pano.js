@@ -29,36 +29,13 @@
   };
   var linkHotspots = [];
   var infoHotspots = [];
-  var levels = [
-    {
-      tileSize: 256,
-      size: 256,
-      fallbackOnly: true,
-    },
-    {
-      tileSize: 512,
-      size: 512,
-    },
-    {
-      tileSize: 512,
-      size: 1024,
-    },
-    {
-      tileSize: 512,
-      size: 2048,
-    },
-    {
-      tileSize: 512,
-      size: 4096,
-    },
-  ];
+
   // Grab elements from DOM.
   var panoElement = document.querySelector("#pano");
   var sceneNameElement = document.querySelector("#titleBar .sceneName");
   var sceneListElement = document.querySelector("#sceneList");
   var sceneElements = document.querySelectorAll("#sceneList .scene");
   var sceneListToggleElement = document.querySelector("#sceneListToggle");
-  var autorotateToggleElement = document.querySelector("#autorotateToggle");
   var fullscreenToggleElement = document.querySelector("#fullscreenToggle");
   var newSceneLeftButton = document.querySelector("#newPanoLeft");
   var newSceneRightButton = document.querySelector("#newPanoRight");
@@ -110,7 +87,7 @@
       urlPrefix + "/" + data.id + "/{z}/{f}/{y}/{x}.jpg",
       { cubeMapPreviewUrl: urlPrefix + "/" + data.id + "/preview.jpg" }
     );
-    var geometry = new Marzipano.CubeGeometry(levels);
+    var geometry = new Marzipano.CubeGeometry(window.APP_DATA.levels);
 
     var limiter = Marzipano.RectilinearView.limit.traditional(
       faceSize,
@@ -159,9 +136,6 @@
     autorotateToggleElement.classList.add("enabled");
   }
 
-  // Set handler for autorotate toggle.
-  autorotateToggleElement.addEventListener("click", toggleAutorotate);
-
   // Set up fullscreen mode, if supported.
   if (screenfull.enabled && data.settings.fullscreenButton) {
     document.body.classList.add("fullscreen-enabled");
@@ -201,90 +175,13 @@
     });
   });
 
-  // DOM elements for view controls.
-  var viewUpElement = document.querySelector("#viewUp");
-  var viewDownElement = document.querySelector("#viewDown");
-  var viewLeftElement = document.querySelector("#viewLeft");
-  var viewRightElement = document.querySelector("#viewRight");
-  var viewInElement = document.querySelector("#viewIn");
-  var viewOutElement = document.querySelector("#viewOut");
-
-  // Dynamic parameters for controls.
-  var velocity = 0.7;
-  var friction = 3;
-
-  // Associate view controls with elements.
-  var controls = viewer.controls();
-  controls.registerMethod(
-    "upElement",
-    new Marzipano.ElementPressControlMethod(
-      viewUpElement,
-      "y",
-      -velocity,
-      friction
-    ),
-    true
-  );
-  controls.registerMethod(
-    "downElement",
-    new Marzipano.ElementPressControlMethod(
-      viewDownElement,
-      "y",
-      velocity,
-      friction
-    ),
-    true
-  );
-  controls.registerMethod(
-    "leftElement",
-    new Marzipano.ElementPressControlMethod(
-      viewLeftElement,
-      "x",
-      -velocity,
-      friction
-    ),
-    true
-  );
-  controls.registerMethod(
-    "rightElement",
-    new Marzipano.ElementPressControlMethod(
-      viewRightElement,
-      "x",
-      velocity,
-      friction
-    ),
-    true
-  );
-  controls.registerMethod(
-    "inElement",
-    new Marzipano.ElementPressControlMethod(
-      viewInElement,
-      "zoom",
-      -velocity,
-      friction
-    ),
-    true
-  );
-  controls.registerMethod(
-    "outElement",
-    new Marzipano.ElementPressControlMethod(
-      viewOutElement,
-      "zoom",
-      velocity,
-      friction
-    ),
-    true
-  );
-
   function sanitize(s) {
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
   }
 
   function switchScene(scene) {
-    stopAutorotate();
     scene.view.setParameters(initialViewParameters);
-    scene.scene.switchTo();
-    startAutorotate();
+    scene.scene.switchTo({ transitionDuration: 100 });
     updateSceneName(scene);
     updateSceneList(scene);
   }
@@ -317,29 +214,6 @@
   function toggleSceneList() {
     sceneListElement.classList.toggle("enabled");
     sceneListToggleElement.classList.toggle("enabled");
-  }
-
-  function startAutorotate() {
-    if (!autorotateToggleElement.classList.contains("enabled")) {
-      return;
-    }
-    viewer.startMovement(autorotate);
-    viewer.setIdleMovement(3000, autorotate);
-  }
-
-  function stopAutorotate() {
-    viewer.stopMovement();
-    viewer.setIdleMovement(Infinity);
-  }
-
-  function toggleAutorotate() {
-    if (autorotateToggleElement.classList.contains("enabled")) {
-      autorotateToggleElement.classList.remove("enabled");
-      stopAutorotate();
-    } else {
-      autorotateToggleElement.classList.add("enabled");
-      startAutorotate();
-    }
   }
 
   function createLinkHotspotElement(hotspot) {

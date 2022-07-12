@@ -26,6 +26,29 @@ var APP_DATA = {
     mouseViewMode: "drag",
     autorotateEnabled: false,
     fullscreenButton: true,
-    viewControlButtons: true,
+    viewControlButtons: false,
   },
+  levels: [
+    {
+      tileSize: 256,
+      size: 256,
+      fallbackOnly: true,
+    },
+    {
+      tileSize: 512,
+      size: 512,
+    },
+    {
+      tileSize: 512,
+      size: 1024,
+    },
+    {
+      tileSize: 512,
+      size: 2048,
+    },
+    {
+      tileSize: 512,
+      size: 4096,
+    },
+  ],
 };

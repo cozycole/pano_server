@@ -39,6 +39,8 @@
   var fullscreenToggleElement = document.querySelector("#fullscreenToggle");
   var newSceneLeftButton = document.querySelector("#newPanoLeft");
   var newSceneRightButton = document.querySelector("#newPanoRight");
+  var nextHouseButton = document.querySelector("#nextHouse");
+  var prevHouseButton = document.querySelector("#prevHouse");
 
   // Detect desktop or mobile mode.
   if (window.matchMedia) {
@@ -371,14 +373,28 @@
   }
 
   // #### MY CODE ####
-
+  function getAddressJson(address) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.responseType = "json";
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        // on receival of new address json (specifies tile paths)
+        // create new req to send prev address json (with distress indicator)
+        // var req = new XMLHttpRequest();
+        // req.open("POST", "addr1.json", true);
+        // req.send();
+        createNewScenes(this.response);
+      }
+    };
+    xhttp.open("GET", "json/addr2.json", true);
+    xhttp.send();
+  }
   // all scenes will go left to right if I can help it
   // so that the arrows will line up with the direction
   // of the changing scenes
   newSceneLeftButton.style.display = "none";
 
   newSceneLeftButton.onclick = () => {
-    console.log("Left Button handler triggered!");
     switchScene(scenes[--sceneIndex]);
     console.log(`Scene ${sceneIndex + 1}`);
     if (sceneIndex == 0) {
@@ -388,7 +404,6 @@
   };
 
   newSceneRightButton.onclick = () => {
-    console.log("Right Button handler triggered!");
     switchScene(scenes[++sceneIndex]);
     console.log(`Scene ${sceneIndex + 1}`);
     if (sceneIndex == data.scenes.length - 1) {
@@ -397,6 +412,52 @@
     newSceneLeftButton.style.display = "inline-block";
   };
 
+  // Hide prev house button if it is the first in the route
+  if (data.routeIndex == 0) {
+    prevHouseButton.style.display = "none";
+  }
+
+  nextHouseButton.onclick = () => {
+    // request new JSON
+    // create new scenes
+    // reset onclick for both buttons
+    // send old json w property info
+    getAddressJson("addr2.json"); // executes createNewScenes on callback
+  };
+  function createNewScenes(addrJson) {
+    // mutating global variable here (might be bad idea)
+    scenes = addrJson.scenes.map(function (data) {
+      // data == scene data
+      var urlPrefix = "tiles";
+      var source = Marzipano.ImageUrlSource.fromString(
+        urlPrefix + "/" + data.prefix + "/{z}/{f}/{y}/{x}.jpg",
+        {
+          cubeMapPreviewUrl: urlPrefix + "/" + data.prefix + "/preview.jpg",
+        }
+      );
+      var geometry = new Marzipano.CubeGeometry(window.APP_DATA.levels);
+
+      var limiter = Marzipano.RectilinearView.limit.traditional(
+        faceSize,
+        (100 * Math.PI) / 180,
+        (120 * Math.PI) / 180
+      );
+      var view = new Marzipano.RectilinearView(initialViewParameters, limiter);
+
+      var scene = viewer.createScene({
+        source: source,
+        geometry: geometry,
+        view: view,
+        pinFirstLevel: true,
+      });
+      return {
+        data: data,
+        scene: scene,
+        view: view,
+      };
+    });
+    switchScene(scenes[addrJson.initSceneIndex]);
+  }
   // Display the initial scene.
   switchScene(scenes[sceneIndex]);
 })();

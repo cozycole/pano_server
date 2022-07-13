@@ -28,6 +28,7 @@ var APP_DATA = {
     fullscreenButton: true,
     viewControlButtons: false,
   },
+  routeIndex: 0,
   levels: [
     {
       tileSize: 256,

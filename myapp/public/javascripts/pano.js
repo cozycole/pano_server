@@ -2,17 +2,12 @@
 
 (function () {
   var Marzipano = window.Marzipano;
-  var bowser = window.bowser;
   var screenfull = window.screenfull;
   var data = window.APP_DATA;
   var faceSize = 4096;
   var sceneIndex = 0;
   var scenes;
-  var initialViewParameters = {
-    pitch: 0,
-    yaw: 0,
-    fov: 1.5707963267948966,
-  };
+  var routeJson;
 
   // Grab elements from DOM.
   var panoElement = document.querySelector("#pano");
@@ -25,6 +20,10 @@
   var newSceneRightButton = document.querySelector("#newPanoRight");
   var nextHouseButton = document.querySelector("#nextHouse");
   var prevHouseButton = document.querySelector("#prevHouse");
+
+  var distressedBox = document.querySelector("#distressed");
+  var superlistBox = document.querySelector("#superlist");
+  var underterminedBox = document.querySelector("#undetermined");
 
   // Viewer options.
   var viewerOpts = {
@@ -39,6 +38,11 @@
   // Function to create scenes.
   function createNewScenes(addrJson) {
     // mutating global variable here (might be bad idea)
+    routeJson = {
+      nextAddr: addrJson.nextAddr,
+      prevAddr: addrJson.prevAddr,
+      routeIndex: addrJson.routeIndex,
+    };
     scenes = addrJson.scenes.map(function (data) {
       // data == scene data
       var urlPrefix = "tiles";
@@ -55,7 +59,10 @@
         (100 * Math.PI) / 180,
         (120 * Math.PI) / 180
       );
-      var view = new Marzipano.RectilinearView(initialViewParameters, limiter);
+      var view = new Marzipano.RectilinearView(
+        data.initialViewParameters,
+        limiter
+      );
 
       var scene = viewer.createScene({
         source: source,
@@ -98,7 +105,8 @@
   }
 
   function switchScene(scene) {
-    scene.view.setParameters(initialViewParameters);
+    console.log(scenes);
+    scene.view.setParameters(scene.data.initialViewParameters);
     scene.scene.switchTo({ transitionDuration: 100 }); // 0.1 sec
     updateSceneName(scene);
     updateSceneList(scene);
@@ -125,28 +133,33 @@
   }
 
   // #### MY CODE ####
-  function getAddressJson(address) {
+
+  function jsonRequest(address, action, body = null, callback) {
+    // Creates GET or POST request
     var xhttp = new XMLHttpRequest();
+    xhttp.open(action, address);
     xhttp.responseType = "json";
+    xhttp.setRequestHeader("Content-Type", "application/json");
     xhttp.onreadystatechange = function () {
-      if (this.readyState == 4 && this.status == 200) {
-        // on receival of new address json (specifies tile paths)
-        // create new req to send prev address json (with distress indicator)
-        // var req = new XMLHttpRequest();
-        // req.open("POST", "addr1.json", true);
-        // req.send();
-        createNewScenes(this.response);
+      if (this.readyState == 4) {
+        if (this.status == 200 && action == "GET") {
+          callback(this.response);
+        } else if (this.status == 201 && action == "PUT") {
+          console.log("JSON PLACED IN DB");
+        } else {
+          setTimeout(() => {
+            console.log(`${action} REQUEST DIDN'T WORK`);
+            jsonRequest(address, action, body); // try again in 5 seconds
+          }, 5000);
+        }
       }
     };
-    xhttp.open("GET", address, true);
-    xhttp.send();
+    console.log(body);
+    xhttp.send(body);
   }
   // all scenes will go left to right if I can help it
   // so that the arrows will line up with the direction
   // of the changing scenes
-  if (sceneIndex == 0) {
-    newSceneLeftButton.style.display = "none";
-  }
 
   newSceneLeftButton.onclick = () => {
     switchScene(scenes[--sceneIndex]);
@@ -172,13 +185,40 @@
   }
 
   nextHouseButton.onclick = () => {
-    // request new JSON
-    // create new scenes
     // reset onclick for both buttons
-    // send old json w property info
-    getAddressJson("json/addr2.json"); // executes createNewScenes on callback
+    // send json w property info
+    jsonRequest(
+      "/pano",
+      "PUT",
+      JSON.stringify({
+        distressed: distressedBox.checked,
+        superlist: superlistBox.checked,
+        undertermined: underterminedBox.checked,
+      })
+    );
+    // uncheck property condition boxes
+    distressedBox.checked = false;
+    superlistBox.checked = false;
+    underterminedBox.checked = false;
+    console.log("GET", routeJson);
+    jsonRequest(routeJson.nextAddr, "GET", null, createNewScenes); // executes createNewScenes on callback
+  };
+
+  underterminedBox.onclick = () => {
+    distressedBox.checked = false;
+    superlistBox.checked = false;
+  };
+
+  superlistBox.onclick = () => {
+    distressedBox.checked = false;
+    underterminedBox.checked = false;
+  };
+
+  distressedBox.onclick = () => {
+    superlistBox.checked = false;
+    underterminedBox.checked = false;
   };
   // Display the initial scene.
-  getAddressJson("json/addr1.json");
+  jsonRequest("json/addr1.json", "GET", null, createNewScenes);
   //switchScene(scenes[sceneIndex]);
 })();
